@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router"
 import { api } from "@/lib/api"
 import type { PublicProfile } from "@/lib/types"
 import { useAuroraTheme } from "@/components/theme-provider"
+import { BackgroundCanvas } from "@/components/background-canvas"
 
 export default function Profile() {
   const { username = "" } = useParams()
@@ -37,7 +38,9 @@ export default function Profile() {
   ].filter((s) => profile?.socials?.[s.key])
 
   return (
-    <div className="h-full overflow-auto p-6">
+    <div className="relative h-full overflow-auto">
+      {profile && profile.background && profile.background !== "none" && <BackgroundCanvas kind={profile.background} />}
+      <div className="relative z-[1] p-6">
       {error ? (
         <div className="grid h-full place-items-center">
           <p className="text-xl text-destructive">#{error} <span className="animate-pulse">▊</span></p>
@@ -112,6 +115,7 @@ export default function Profile() {
       ) : (
         <p className="text-muted-foreground">loading…</p>
       )}
+      </div>
     </div>
   )
 }

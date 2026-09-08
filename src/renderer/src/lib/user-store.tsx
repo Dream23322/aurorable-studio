@@ -8,6 +8,7 @@ interface UserState {
   user: LiveUser | null
   profile: MeProfile | null
   ready: boolean
+  offline: boolean
   refresh: () => Promise<void>
   logout: () => Promise<void>
 }
@@ -16,6 +17,7 @@ const UserContext = createContext<UserState>({
   user: null,
   profile: null,
   ready: false,
+  offline: false,
   refresh: async () => {},
   logout: async () => {}
 })
@@ -28,11 +30,13 @@ export function UserProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<LiveUser | null>(null)
   const [profile, setProfile] = useState<MeProfile | null>(null)
   const [ready, setReady] = useState(false)
+  const [offline, setOffline] = useState(false)
   const { setTheme } = useAuroraTheme()
 
   const refresh = async () => {
     try {
       const res = await api<{ user: LiveUser | null }>("/api/auth/me")
+      setOffline(false)
       if (res.user) {
         setUser(res.user)
         try {
@@ -47,7 +51,13 @@ export function UserProvider({ children }: { children: ReactNode }) {
         setUser(null)
         setProfile(null)
       }
-    } catch {
+    } catch (err) {
+      // network failure vs auth failure
+      if ((err as Error).message.startsWith("HTTP") && (err as Error & { status?: number }).status === 401) {
+        setOffline(false)
+      } else {
+        setOffline(true)
+      }
       setUser(null)
       setProfile(null)
     } finally {
@@ -66,7 +76,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <UserContext.Provider value={{ user, profile, ready, refresh, logout }}>
+    <UserContext.Provider value={{ user, profile, ready, offline, refresh, logout }}>
       {children}
     </UserContext.Provider>
   )
