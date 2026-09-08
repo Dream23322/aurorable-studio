@@ -1,8 +1,10 @@
+import { useEffect, useState } from "react"
 import { useProject } from "./store"
 import { clipDuration, type EffectKeyframe, type TimelineClip } from "./segments"
 import { fmtTime, clamp } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
+import { toast } from "sonner"
 
 function Slider({
   label,
@@ -33,6 +35,7 @@ function Slider({
 export function Inspector() {
   const { project, mutate, pushUndo, selectedUid, playhead } = useProject()
   const clip = project.segments.find((c) => c.uid === selectedUid) ?? null
+  const [copied, setCopied] = useState<Partial<TimelineClip> | null>(null)
 
   const setClip = (fn: (c: TimelineClip) => void, undo = false) => {
     if (!clip) return
@@ -40,6 +43,66 @@ export function Inspector() {
     mutate((p) => {
       const c = p.segments.find((x) => x.uid === clip.uid)
       if (c) fn(c)
+    })
+  }
+
+  const copyClip = () => {
+    if (!clip) return
+    const { uid, timelineStart, sourceId, ...settings } = clip
+    void uid
+    void timelineStart
+    void sourceId
+    setCopied(settings)
+  }
+
+  const pasteClip = () => {
+    if (!clip || !copied) return
+    pushUndo()
+    mutate((p) => {
+      const c = p.segments.find((x) => x.uid === clip.uid)
+      if (c) Object.assign(c, structuredClone(copied))
+    })
+    toast.success("clip settings pasted")
+  }
+
+  const applyPreset = (name: string) => {
+    if (!clip) return
+    pushUndo()
+    mutate((p) => {
+      const c = p.segments.find((x) => x.uid === clip.uid)
+      if (!c) return
+      switch (name) {
+        case "bloom-subtle":
+          c.bloomThreshold = 0.85
+          c.bloomRadius = 6
+          c.bloomIntensity = 0.25
+          break
+        case "bloom-neon":
+          c.bloomThreshold = 0.55
+          c.bloomRadius = 14
+          c.bloomIntensity = 0.65
+          break
+        case "bloom-warm":
+          c.bloomThreshold = 0.7
+          c.bloomRadius = 10
+          c.bloomIntensity = 0.4
+          break
+        case "mb-90":
+          c.motionBlur = 3
+          c.motionBlurIntensity = 0.7
+          c.motionBlurMode = "tmix"
+          break
+        case "mb-180":
+          c.motionBlur = 6
+          c.motionBlurIntensity = 0.5
+          c.motionBlurMode = "tmix"
+          break
+        case "mb-smooth":
+          c.motionBlur = 8
+          c.motionBlurIntensity = 0.4
+          c.motionBlurMode = "tmix-dblur"
+          break
+      }
     })
   }
 
@@ -83,6 +146,19 @@ export function Inspector() {
 
   const n = (v: unknown, fallback: number) => (typeof v === "number" ? v : fallback)
 
+  // keyboard copy/paste (ctrl+c / ctrl+v dispatched by Studio)
+  useEffect(() => {
+    const onCopy = () => copyClip()
+    const onPaste = () => pasteClip()
+    window.addEventListener("aurorable:copy-clip", onCopy)
+    window.addEventListener("aurorable:paste-clip", onPaste)
+    return () => {
+      window.removeEventListener("aurorable:copy-clip", onCopy)
+      window.removeEventListener("aurorable:paste-clip", onPaste)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [clip?.uid, copied])
+
   if (!clip) {
     return (
       <div className="grid min-h-0 flex-1 place-items-center p-4 text-center text-xs text-muted-foreground">
@@ -96,15 +172,21 @@ export function Inspector() {
   return (
     <div className="min-h-0 flex-1 overflow-auto p-3" style={{ background: "var(--bg-elev)" }}>
       <div className="mb-2 text-xs text-muted-foreground">
-        clip · {project.segments.length ? "selected" : ""} · {fmtTime(clipDuration(clip))}
+        clip · {fmtTime(clipDuration(clip))}
       </div>
 
-      <div className="mb-3 flex gap-1.5">
+      <div className="mb-3 flex flex-wrap gap-1.5">
         <Button size="sm" variant="ghost" onClick={() => window.dispatchEvent(new CustomEvent("aurorable:mark", { detail: { edge: "in" } }))}>
           mark in (i)
         </Button>
         <Button size="sm" variant="ghost" onClick={() => window.dispatchEvent(new CustomEvent("aurorable:mark", { detail: { edge: "out" } }))}>
           mark out (o)
+        </Button>
+        <Button size="sm" variant="ghost" onClick={copyClip} title="copy clip settings (ctrl+c)">
+          copy
+        </Button>
+        <Button size="sm" variant="ghost" disabled={!copied} onClick={pasteClip} title="paste clip settings (ctrl+v)">
+          paste
         </Button>
       </div>
 
@@ -170,6 +252,27 @@ export function Inspector() {
             stretch
           </label>
         </div>
+      </div>
+
+      <div className="mb-3 flex flex-wrap gap-1.5 border-t pt-3" style={{ borderColor: "var(--border)" }}>
+        <Button size="sm" variant="ghost" onClick={() => applyPreset("bloom-subtle")}>
+          bloom: subtle
+        </Button>
+        <Button size="sm" variant="ghost" onClick={() => applyPreset("bloom-neon")}>
+          bloom: neon
+        </Button>
+        <Button size="sm" variant="ghost" onClick={() => applyPreset("bloom-warm")}>
+          bloom: warm
+        </Button>
+        <Button size="sm" variant="ghost" onClick={() => applyPreset("mb-90")}>
+          blur: 90°
+        </Button>
+        <Button size="sm" variant="ghost" onClick={() => applyPreset("mb-180")}>
+          blur: 180°
+        </Button>
+        <Button size="sm" variant="ghost" onClick={() => applyPreset("mb-smooth")}>
+          blur: smooth
+        </Button>
       </div>
 
       <div className="mb-3 border-t pt-3" style={{ borderColor: "var(--border)" }}>

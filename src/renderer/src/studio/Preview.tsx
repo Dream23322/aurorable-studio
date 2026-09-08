@@ -5,37 +5,32 @@ import { useProject } from "./store"
 import { Button } from "@/components/ui/button"
 import { Play, Pause, SkipBack, SkipForward } from "lucide-react"
 
-export function Preview() {
+export function Preview({ previewUrl }: { previewUrl?: string | null }) {
   const { user } = useUser()
   const { project, selectedUid, playhead, setPlayhead } = useProject()
-  const [previewSrc, setPreviewSrc] = useState<string | null>(null)
   const [label, setLabel] = useState("no clip selected")
   const [playing, setPlaying] = useState(false)
   const [current, setCurrent] = useState(0)
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const frameRef = useRef<HTMLDivElement>(null)
 
   const clip = project.segments.find((c) => c.uid === selectedUid) ?? null
 
+  // proxy preview becomes the source when it arrives
   useEffect(() => {
-    const onPreviewReady = (e: Event) => {
-      const url = (e as CustomEvent).detail.url as string
-      setPreviewSrc(url)
-      const v = videoRef.current
-      if (v) {
-        v.src = url
-        setLabel("480p proxy preview")
-        void v.load()
-      }
-    }
-    window.addEventListener("aurorable:preview-ready", onPreviewReady)
-    return () => window.removeEventListener("aurorable:preview-ready", onPreviewReady)
-  }, [])
+    if (!previewUrl) return
+    const v = videoRef.current
+    if (!v) return
+    v.src = previewUrl
+    setLabel("480p proxy preview")
+    void v.load()
+  }, [previewUrl])
 
-  // load source when selection changes (unless a preview is playing)
+  // load source when selection changes (unless a proxy preview is playing)
   useEffect(() => {
     const v = videoRef.current
-    if (!v || previewSrc) return
+    if (!v || previewUrl) return
     if (!clip || !user) {
       setLabel("no clip selected")
       v.removeAttribute("src")
@@ -46,7 +41,7 @@ export function Preview() {
       .catch(() => {})
     setLabel(`scrub source · in ${fmtTime(clip.start)} · out ${fmtTime(clip.end)}`)
     v.load()
-  }, [clip?.uid, user, previewSrc])
+  }, [clip?.uid, user, previewUrl])
 
   const seekTo = (t: number) => {
     const v = videoRef.current
@@ -74,6 +69,40 @@ export function Preview() {
     window.addEventListener("aurorable:play", onPlay)
     return () => window.removeEventListener("aurorable:play", onPlay)
   }, [togglePlay])
+
+  // j/k/l transport + fullscreen
+  useEffect(() => {
+    const onTransport = (e: Event) => {
+      const { action } = (e as CustomEvent).detail as { action: string }
+      const v = videoRef.current
+      if (!v) return
+      if (action === "j") {
+        v.playbackRate = -2
+        void v.play().catch(() => {})
+      } else if (action === "l") {
+        v.playbackRate = 2
+        void v.play().catch(() => {})
+      } else {
+        v.playbackRate = 1
+        v.pause()
+      }
+    }
+    const onFullscreen = () => {
+      frameRef.current?.requestFullscreen().catch(() => {})
+    }
+    window.addEventListener("aurorable:transport", onTransport)
+    window.addEventListener("aurorable:fullscreen", onFullscreen)
+    return () => {
+      window.removeEventListener("aurorable:transport", onTransport)
+      window.removeEventListener("aurorable:fullscreen", onFullscreen)
+    }
+  }, [])
+
+  const onPlaybackEnded = () => {
+    const v = videoRef.current
+    if (!v) return
+    v.playbackRate = 1
+  }
 
   const onTimeUpdate = () => {
     const v = videoRef.current
@@ -129,7 +158,7 @@ export function Preview() {
 
   return (
     <div className="flex min-h-0 flex-col" style={{ background: "var(--bg-elev)" }}>
-      <div className="relative flex min-h-0 flex-1 items-center justify-center overflow-hidden bg-black">
+      <div ref={frameRef} className="relative flex min-h-0 flex-1 items-center justify-center overflow-hidden bg-black">
         <video
           ref={videoRef}
           playsInline
@@ -137,6 +166,7 @@ export function Preview() {
           onTimeUpdate={onTimeUpdate}
           onPlay={() => setPlaying(true)}
           onPause={() => setPlaying(false)}
+          onEnded={onPlaybackEnded}
         />
         <span className="absolute top-2 left-2 rounded bg-black/60 px-2 py-0.5 text-[11px] text-aurora-pink">{label}</span>
         <canvas ref={canvasRef} width="192" height="48" className="absolute right-2 bottom-2 h-12 w-48 rounded" />

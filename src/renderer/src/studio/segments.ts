@@ -75,6 +75,7 @@ export interface TimelineClip extends Segment {
 
 export interface StudioSettings {
   bgMusic?: { audioId: string; volume: number }
+  markers?: Array<{ at: number; label: string }>
 }
 
 export interface StudioProject {

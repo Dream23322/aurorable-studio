@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { api } from "@/lib/api"
 import type { LocalRenderProgress, RenderProgress } from "@/lib/types"
 import { useProject } from "./store"
@@ -54,6 +54,61 @@ export function RenderDialog({ open, onOpenChange }: { open: boolean; onOpenChan
       .catch(() => {})
   }, [open])
 
+  const timers = useRef<ReturnType<typeof setInterval>[]>([])
+
+  useEffect(() => {
+    const list = timers.current
+    return () => list.forEach(clearInterval)
+  }, [])
+
+  const pollServer = (id: string) => {
+    const timer = setInterval(async () => {
+      try {
+        const j = await api<RenderProgress>(`/api/me/videos/render/${id}/progress`)
+        setJob({
+          kind: "server",
+          id,
+          status: j.status,
+          percent: j.percent,
+          error: j.error,
+          clipId: j.clip?.id ?? null,
+          previewUrl: j.previewUrl ?? null
+        })
+        if (j.status === "done" || j.status === "error") {
+          clearInterval(timer)
+          timers.current = timers.current.filter((t) => t !== timer)
+          if (j.status === "done" && j.isPreview && j.previewUrl) {
+            window.dispatchEvent(new CustomEvent("aurorable:preview-ready", { detail: { url: j.previewUrl } }))
+          }
+          if (j.status === "error") {
+            const l = await api<{ logs: string[] }>(`/api/me/videos/render/${id}/logs`)
+            setLogs(l.logs.slice(-30))
+          }
+        }
+      } catch {
+        /* ignore */
+      }
+    }, 1200)
+    timers.current.push(timer)
+  }
+
+  const pollLocal = (id: string) => {
+    const timer = setInterval(async () => {
+      try {
+        const j = await api<LocalRenderProgress>(`/api/me/render/local/${id}/progress`)
+        setJob({ kind: "local", id, status: j.status, percent: j.percent, error: j.error, clipId: j.clipId })
+        if (j.status === "done" || j.status === "error") {
+          clearInterval(timer)
+          timers.current = timers.current.filter((t) => t !== timer)
+          if (j.status === "error") setLogs((j.stderr ?? "").split("\n").filter(Boolean).slice(-30))
+        }
+      } catch {
+        /* ignore */
+      }
+    }, 1500)
+    timers.current.push(timer)
+  }
+
   const submit = async () => {
     setError("")
     setJob(null)
@@ -97,50 +152,6 @@ export function RenderDialog({ open, onOpenChange }: { open: boolean; onOpenChan
     } catch (e) {
       setError((e as Error).message)
     }
-  }
-
-  const pollServer = (id: string) => {
-    const timer = setInterval(async () => {
-      try {
-        const j = await api<RenderProgress>(`/api/me/videos/render/${id}/progress`)
-        setJob({
-          kind: "server",
-          id,
-          status: j.status,
-          percent: j.percent,
-          error: j.error,
-          clipId: j.clip?.id ?? null,
-          previewUrl: j.previewUrl ?? null
-        })
-        if (j.status === "done" || j.status === "error") {
-          clearInterval(timer)
-          if (j.status === "done" && j.isPreview && j.previewUrl) {
-            window.dispatchEvent(new CustomEvent("aurorable:preview-ready", { detail: { url: j.previewUrl } }))
-          }
-          if (j.status === "error") {
-            const l = await api<{ logs: string[] }>(`/api/me/videos/render/${id}/logs`)
-            setLogs(l.logs.slice(-30))
-          }
-        }
-      } catch {
-        /* ignore */
-      }
-    }, 1200)
-  }
-
-  const pollLocal = (id: string) => {
-    const timer = setInterval(async () => {
-      try {
-        const j = await api<LocalRenderProgress>(`/api/me/render/local/${id}/progress`)
-        setJob({ kind: "local", id, status: j.status, percent: j.percent, error: j.error, clipId: j.clipId })
-        if (j.status === "done" || j.status === "error") {
-          clearInterval(timer)
-          if (j.status === "error") setLogs((j.stderr ?? "").split("\n").filter(Boolean).slice(-30))
-        }
-      } catch {
-        /* ignore */
-      }
-    }, 1500)
   }
 
   return (

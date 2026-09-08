@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react"
+import { Fragment, useCallback, useEffect, useRef, useState } from "react"
 import { useNavigate, useSearchParams } from "react-router"
 import { api } from "@/lib/api"
 import { useUser } from "@/lib/user-store"
@@ -11,6 +11,12 @@ import { Timeline } from "@/studio/Timeline"
 import { Inspector } from "@/studio/Inspector"
 import { Preview } from "@/studio/Preview"
 import { RenderDialog } from "@/studio/RenderDialog"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle
+} from "@/components/ui/dialog"
 import { Undo2, Redo2, Clapperboard, Film } from "lucide-react"
 
 function StudioInner() {
@@ -39,6 +45,8 @@ function StudioInner() {
   const [saveState, setSaveState] = useState<"saved" | "dirty" | "saving">("saved")
   const [renderOpen, setRenderOpen] = useState(false)
   const [workerOnline, setWorkerOnline] = useState(0)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const [helpOpen, setHelpOpen] = useState(false)
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const addClip = useCallback(
@@ -64,9 +72,10 @@ function StudioInner() {
     return () => window.removeEventListener("aurorable:addclip", onAddClip)
   }, [addClip])
 
-  // autosave (debounced)
+  // autosave (debounced) + drop the proxy preview when the timeline changes
   useEffect(() => {
     setSaveState("dirty")
+    setPreviewUrl(null)
     if (saveTimer.current) clearTimeout(saveTimer.current)
     saveTimer.current = setTimeout(() => {
       void save(true)
@@ -144,6 +153,13 @@ function StudioInner() {
     return () => clearInterval(t)
   }, [])
 
+  // proxy previews arrive via event
+  useEffect(() => {
+    const onPreview = (e: Event) => setPreviewUrl((e as CustomEvent).detail.url as string)
+    window.addEventListener("aurorable:preview-ready", onPreview)
+    return () => window.removeEventListener("aurorable:preview-ready", onPreview)
+  }, [])
+
   // mark in/out
   const onMark = useCallback(
     (edge: "in" | "out") => {
@@ -182,6 +198,10 @@ function StudioInner() {
         } else if (e.key === "s") {
           e.preventDefault()
           void save()
+        } else if (e.key === "c") {
+          window.dispatchEvent(new CustomEvent("aurorable:copy-clip"))
+        } else if (e.key === "v") {
+          window.dispatchEvent(new CustomEvent("aurorable:paste-clip"))
         }
         return
       }
@@ -199,6 +219,30 @@ function StudioInner() {
         case "o":
           onMark("out")
           break
+        case "m":
+          mutate((p) => {
+            p.settings.markers ??= []
+            p.settings.markers.push({ at: Math.round(playhead * 100) / 100, label: "" })
+            p.settings.markers.sort((a, b) => a.at - b.at)
+          })
+          break
+        case "j":
+          window.dispatchEvent(new CustomEvent("aurorable:transport", { detail: { action: "j" } }))
+          break
+        case "k":
+          window.dispatchEvent(new CustomEvent("aurorable:transport", { detail: { action: "k" } }))
+          break
+        case "l":
+          window.dispatchEvent(new CustomEvent("aurorable:transport", { detail: { action: "l" } }))
+          break
+        case "?":
+        case "h":
+          setHelpOpen((v) => !v)
+          break
+        case "~":
+        case "`":
+          window.dispatchEvent(new CustomEvent("aurorable:fullscreen"))
+          break
         case "Delete":
         case "Backspace":
           window.dispatchEvent(new CustomEvent("aurorable:delete"))
@@ -213,7 +257,7 @@ function StudioInner() {
     }
     window.addEventListener("keydown", onKey)
     return () => window.removeEventListener("keydown", onKey)
-  }, [undo, redo, onMark, save])
+  }, [undo, redo, onMark, save, playhead, mutate])
 
   useEffect(() => {
     document.body.classList.add("no-crt")
@@ -244,6 +288,9 @@ function StudioInner() {
         <Button size="sm" variant="ghost" onClick={redo} disabled={!canRedo} title="redo (ctrl+shift+z)">
           <Redo2 size={14} />
         </Button>
+        <Button size="sm" variant="ghost" onClick={() => setHelpOpen(true)} title="shortcuts (?/h)">
+          ?
+        </Button>
         <Button size="sm" variant="ghost" onClick={() => navigate("/clips")}>
           <Film size={14} className="mr-1.5" />
           clips
@@ -257,7 +304,7 @@ function StudioInner() {
       <div className="flex min-h-0 flex-1 flex-col">
         <div className="grid min-h-0 flex-1 grid-cols-[240px_minmax(320px,1fr)_300px]">
           <ClipsBin />
-          <Preview />
+          <Preview previewUrl={previewUrl} />
           <div className="flex min-h-0 flex-col border-l" style={{ borderColor: "var(--border)" }}>
             <div className="border-b px-3 py-2 text-xs font-semibold text-aurora-pink" style={{ borderColor: "var(--border)" }}>
               inspector
@@ -271,6 +318,37 @@ function StudioInner() {
       </div>
 
       <RenderDialog open={renderOpen} onOpenChange={setRenderOpen} />
+
+      <Dialog open={helpOpen} onOpenChange={setHelpOpen}>
+        <DialogContent className="w-[440px]">
+          <DialogHeader>
+            <DialogTitle className="text-aurora-pink">studio shortcuts</DialogTitle>
+          </DialogHeader>
+          <div className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-1.5 text-sm">
+            {[
+              ["space", "play / pause"],
+              ["s", "split at playhead"],
+              ["i / o", "mark in / out"],
+              ["m", "add marker at playhead"],
+              ["j / k / l", "back / pause / forward"],
+              ["← / →", "previous / next clip"],
+              ["del", "delete selected clip"],
+              ["ctrl+z / ctrl+shift+z", "undo / redo"],
+              ["ctrl+c / ctrl+v", "copy / paste clip settings"],
+              ["ctrl+s", "save project"],
+              ["~", "fullscreen preview"],
+              ["? / h", "this panel"]
+            ].map(([k, v]) => (
+              <Fragment key={k}>
+                <kbd className="rounded border px-1.5 py-0.5 font-mono text-xs" style={{ borderColor: "var(--border)", background: "var(--bg-elev-2)" }}>
+                  {k}
+                </kbd>
+                <span className="text-muted-foreground">{v}</span>
+              </Fragment>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

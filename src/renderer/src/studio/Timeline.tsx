@@ -26,9 +26,12 @@ export function Timeline() {
   const [pps, setPps] = useState(80)
   const [snapEnabled, setSnapEnabled] = useState(true)
   const [drag, setDrag] = useState<DragState>(null)
+  const [snapTime, setSnapTime] = useState<number | null>(null)
   const [clips, setClips] = useState<Record<string, { title?: string; thumbnailUrl?: string | null; durationSeconds?: number }>>({})
   const scrollRef = useRef<HTMLDivElement>(null)
+  const prevPlayhead = useRef(playhead)
   const total = projectDuration(project)
+  const markers = project.settings.markers ?? []
 
   useEffect(() => {
     if (!user) return
@@ -61,6 +64,21 @@ export function Timeline() {
     return best
   }
 
+  // auto-center the playhead when it jumps (seek), not during playback
+  useEffect(() => {
+    const el = scrollRef.current
+    if (!el) return
+    const delta = Math.abs(playhead - prevPlayhead.current)
+    prevPlayhead.current = playhead
+    if (delta < 0.01 || delta > 2) return
+    const px = playhead * pps
+    const left = el.scrollLeft
+    const right = left + el.clientWidth
+    if (px < left + 24 || px > right - 24) {
+      el.scrollLeft = px - el.clientWidth / 2
+    }
+  }, [playhead, pps])
+
   const toTime = (x: number) => x / pps
 
   const onPointerDown = (e: React.PointerEvent, clip: TimelineClip, mode: DragMode) => {
@@ -89,6 +107,7 @@ export function Timeline() {
         let newStart = Math.max(0, d.origTimelineStart + dt)
         const snap = nearestSnap(newStart, seg.uid)
         if (snap !== null) newStart = snap
+        setSnapTime(snap)
         mutate((p) => {
           const s = p.segments.find((c) => c.uid === d.uid)
           if (s) s.timelineStart = newStart
@@ -98,6 +117,7 @@ export function Timeline() {
         const edge = seg.timelineStart + (newIn - d.origIn)
         const snap = nearestSnap(edge, seg.uid)
         if (snap !== null && Math.abs(snap - edge) < 0.3) newIn = d.origIn + (snap - seg.timelineStart)
+        setSnapTime(snap !== null && Math.abs(snap - edge) < 0.3 ? snap : null)
         mutate((p) => {
           const s = p.segments.find((c) => c.uid === d.uid)
           if (s) {
@@ -110,13 +130,17 @@ export function Timeline() {
         const edge = seg.timelineStart + (newOut - d.origOut)
         const snap = nearestSnap(edge, seg.uid)
         if (snap !== null && Math.abs(snap - edge) < 0.3) newOut = d.origOut + (snap - seg.timelineStart)
+        setSnapTime(snap !== null && Math.abs(snap - edge) < 0.3 ? snap : null)
         mutate((p) => {
           const s = p.segments.find((c) => c.uid === d.uid)
           if (s) s.end = newOut
         })
       }
     }
-    const onUp = () => setDrag(null)
+    const onUp = () => {
+      setDrag(null)
+      setSnapTime(null)
+    }
     window.addEventListener("pointermove", onMove)
     window.addEventListener("pointerup", onUp)
     return () => {
@@ -249,6 +273,28 @@ export function Timeline() {
                 )}
               </div>
             ))}
+            {markers.map((m, i) => (
+              <button
+                key={i}
+                title={m.label || `marker ${fmtTime(m.at)}`}
+                className="absolute top-0 z-10 h-full cursor-pointer border-l-2 border-aurora-bright/80"
+                style={{ left: m.at * pps }}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setPlayhead(m.at)
+                  window.dispatchEvent(new CustomEvent("aurorable:seek", { detail: { time: m.at } }))
+                }}
+                onContextMenu={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  mutate((p) => {
+                    p.settings.markers = (p.settings.markers ?? []).filter((_, j) => j !== i)
+                  })
+                }}
+              >
+                <span className="absolute -top-0.5 left-1 text-[10px] text-aurora-bright">▼</span>
+              </button>
+            ))}
           </div>
 
           {/* V1 */}
@@ -296,8 +342,27 @@ export function Timeline() {
                       {clip.speed !== 1 && `${clip.speed}× `}
                       {clip.mute && "muted "}
                       {clip.reverse && "rev "}
+                      {clip.transition && clip.transition.type !== "none" && `→${clip.transition.type} `}
                     </span>
                   </div>
+                  {(clip.speedPoints ?? []).length > 0 &&
+                    clip.speedPoints!.map((sp, i) => (
+                      <span
+                        key={i}
+                        className="absolute top-1 z-[3] h-2 w-2 rotate-45 rounded-[1px] border border-aurora-bright bg-background"
+                        style={{ left: `${sp.at * 100}%` }}
+                        title={`ramp ${sp.speed}×`}
+                      />
+                    ))}
+                  {(clip.keyframes ?? []).length > 0 &&
+                    clip.keyframes!.map((kf, i) => (
+                      <span
+                        key={i}
+                        className="absolute bottom-1 z-[3] h-1.5 w-1.5 rounded-full bg-aurora-deep"
+                        style={{ left: `${kf.at * 100}%` }}
+                        title={`key ${Math.round(kf.at * 100)}%`}
+                      />
+                    ))}
                   <div className="absolute top-0 bottom-0 left-0 w-1.5 cursor-ew-resize" onPointerDown={(e) => onPointerDown(e, clip, "trim-start")} />
                   <div className="absolute top-0 bottom-0 right-0 w-1.5 cursor-ew-resize" onPointerDown={(e) => onPointerDown(e, clip, "trim-end")} />
                 </div>
@@ -347,6 +412,13 @@ export function Timeline() {
             className="pointer-events-none absolute top-0 bottom-0 w-0.5 z-20"
             style={{ left: playhead * pps, background: "var(--pink-bright)", boxShadow: "0 0 8px rgba(var(--glow-rgb),0.6)" }}
           />
+          {/* snap indicator */}
+          {snapTime !== null && (
+            <div
+              className="pointer-events-none absolute top-0 bottom-0 z-30 border-l border-dashed border-aurora-bright/70"
+              style={{ left: snapTime * pps }}
+            />
+          )}
         </div>
       </div>
 
@@ -354,7 +426,7 @@ export function Timeline() {
         <span>
           time {fmtTime(playhead)} / {fmtTime(total)}
         </span>
-        <span>space play · s split · i/o in/out · del delete</span>
+        <span>space play · s split · i/o in/out · m marker · j/k/l transport · del delete</span>
       </div>
     </div>
   )
