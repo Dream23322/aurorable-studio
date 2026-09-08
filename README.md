@@ -17,15 +17,20 @@ Built on Electron + React 19 + Tailwind 4 + Radix UI.
 - **Full site in an app.** Upload, clips dashboard, watch pages, public profiles,
   profile editor, account (worker tokens, password, export), showcase.
 - **The studio.** A professional timeline editor over the site's render engine:
-  - trim / split / move with snapping, speed ramps, markers
-  - motion blur (tmix / tmix-dblur / minterpolate), chroma aberration, bloom,
-    film blur, reverse, flicker, text overlays, transitions, background music,
-    keyframes
-  - waveform lanes on the audio track, live histogram scope in the preview
-  - renders via `POST /api/me/videos/render` (preview / draft / final, CRF,
-    NVENC) or `POST /api/me/render/local` — render on your own PC with the
-    aurorable worker
-  - project autosave through `/api/me/sessions`
+  - trim / split / move with snapping + snap indicators, trim-scrub preview,
+    speed ramps (with quick-add + ramp markers), timeline markers (m), markers
+    on the ruler, transition badges
+  - motion blur (tmix / tmix-dblur / minterpolate) + presets, chroma aberration,
+    bloom + presets, film blur, reverse, flicker, text overlays, transitions,
+    background music, keyframes (dots on clips)
+  - waveform lanes on the audio track, live histogram scope in the preview,
+    j/k/l transport, fullscreen preview (~)
+  - copy / paste clip settings (ctrl+c/v), duplicate (ctrl+d), ripple delete
+    (shift+del), undo/redo, fit zoom, shortcuts panel (?/h)
+  - one-click 480p preview render, plus full renders via
+    `POST /api/me/videos/render` (preview / draft / final, CRF, NVENC) or
+    `POST /api/me/render/local` — render on your own PC with the aurorable worker
+  - project autosave through `/api/me/sessions`, deep-linkable session URLs
 
 ## Run
 

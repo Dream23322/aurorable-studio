@@ -3,12 +3,16 @@ import { api } from "@/lib/api"
 import { fmtShort } from "@/lib/utils"
 import type { LiveVideo } from "@/lib/types"
 import { useUser } from "@/lib/user-store"
+import { useProject } from "./store"
 import { Button } from "@/components/ui/button"
 import { RefreshCw } from "lucide-react"
 
 export function ClipsBin() {
   const { user } = useUser()
+  const { project } = useProject()
   const [clips, setClips] = useState<LiveVideo[]>([])
+
+  const used = new Set(project.segments.map((s) => s.sourceId))
 
   const load = async () => {
     if (!user) return
@@ -50,6 +54,7 @@ export function ClipsBin() {
                 <div className="truncate text-xs">{c.title}</div>
                 <div className="text-[10px] text-muted-foreground">
                   {c.width}×{c.height} · {fmtShort(c.durationSeconds)}
+                  {used.has(c.id) && <span className="ml-1 text-aurora-good">· in timeline</span>}
                 </div>
               </div>
             </button>

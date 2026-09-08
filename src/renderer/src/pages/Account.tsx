@@ -149,7 +149,7 @@ export default function Account() {
         <section className="rounded-lg border p-4" style={{ borderColor: "var(--border)", background: "var(--bg-elev)" }}>
           <h2 className="mb-3 text-sm text-aurora-pink">about</h2>
           <p className="text-xs text-muted-foreground">
-            aurorable app v0.1.0 · your clips live on{" "}
+            aurorable app v0.2.0 · your clips live on{" "}
             <a href="https://clips.roraaaa.dev" target="_blank" rel="noreferrer" className="text-aurora-pink hover:underline">
               clips.roraaaa.dev
             </a>

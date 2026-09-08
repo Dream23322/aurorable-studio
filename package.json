@@ -1,6 +1,6 @@
 {
   "name": "aurorable",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Aurorable — your clips, in an app. Cut, grade, glow, render. Client for clips.roraaaa.dev.",
   "main": "./out/main/index.js",
   "author": "aurorable",
