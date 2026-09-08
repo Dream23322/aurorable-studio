@@ -1,14 +1,31 @@
 ﻿import { app, shell, BrowserWindow, ipcMain } from "electron"
 import { join } from "path"
+import { readFileSync, writeFileSync, existsSync } from "fs"
 import { electronApp, optimizer, is } from "@electron-toolkit/utils"
 import { startProxy, PROXY_PORT } from "./proxy"
 
 let mainWindow: BrowserWindow | null = null
 
+function boundsFile(): string {
+  return join(app.getPath("userData"), "window.json")
+}
+
+function loadBounds(): { width?: number; height?: number; x?: number; y?: number } {
+  try {
+    if (existsSync(boundsFile())) return JSON.parse(readFileSync(boundsFile(), "utf-8"))
+  } catch {
+    /* ignore */
+  }
+  return {}
+}
+
 function createWindow(): void {
+  const saved = loadBounds()
   mainWindow = new BrowserWindow({
-    width: 1440,
-    height: 900,
+    width: saved.width ?? 1440,
+    height: saved.height ?? 900,
+    x: saved.x,
+    y: saved.y,
     minWidth: 1024,
     minHeight: 680,
     show: false,
@@ -24,6 +41,16 @@ function createWindow(): void {
 
   mainWindow.on("ready-to-show", () => {
     mainWindow?.show()
+  })
+
+  mainWindow.on("close", () => {
+    if (mainWindow) {
+      try {
+        writeFileSync(boundsFile(), JSON.stringify(mainWindow.getBounds()))
+      } catch {
+        /* ignore */
+      }
+    }
   })
 
   mainWindow.webContents.setWindowOpenHandler((details) => {

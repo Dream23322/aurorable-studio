@@ -17,6 +17,21 @@ export default function Clips() {
   const [quota, setQuota] = useState<QuotaInfo>({ clipCount: 0, freeClipQuota: 10, nextUploadCompressed: false })
   const [sessions, setSessions] = useState<StudioSessionMeta[]>([])
   const [showProjects, setShowProjects] = useState(false)
+  const [sort, setSort] = useState<"newest" | "oldest" | "views" | "duration">("newest")
+
+  const sorted = [...clips].sort((a, b) => {
+    switch (sort) {
+      case "oldest":
+        return a.createdAt - b.createdAt
+      case "views":
+        return b.views - a.views
+      case "duration":
+        return b.durationSeconds - a.durationSeconds
+      default:
+        return b.createdAt - a.createdAt
+    }
+  })
+  const filtered = filter ? sorted.filter((c) => c.title.toLowerCase().includes(filter.toLowerCase())) : sorted
 
   const load = async () => {
     try {
@@ -60,8 +75,6 @@ export default function Clips() {
     setSessions((prev) => prev.filter((s) => s.id !== id))
   }
 
-  const filtered = filter ? clips.filter((c) => c.title.toLowerCase().includes(filter.toLowerCase())) : clips
-
   return (
     <div className="h-full overflow-auto p-6">
       <div className="mb-4 flex flex-wrap items-center gap-3">
@@ -70,6 +83,17 @@ export default function Clips() {
           {user?.username} · {quota.clipCount}/{quota.freeClipQuota} free
         </span>
         <div className="flex-1" />
+        <select
+          value={sort}
+          onChange={(e) => setSort(e.target.value as never)}
+          className="rounded border bg-background px-2 py-1 text-xs"
+          style={{ borderColor: "var(--border)" }}
+        >
+          <option value="newest">newest</option>
+          <option value="oldest">oldest</option>
+          <option value="views">most viewed</option>
+          <option value="duration">longest</option>
+        </select>
         <Button variant="ghost" size="sm" onClick={() => setShowProjects((v) => !v)}>
           <FolderOpen size={14} className="mr-1.5" />
           projects ({sessions.length})
@@ -130,7 +154,7 @@ export default function Clips() {
                 <Button size="sm" variant="ghost" onClick={() => navigate(`/studio?clip=${c.id}`)}>
                   studio
                 </Button>
-                <Button size="sm" variant="ghost" onClick={() => navigator.clipboard.writeText(`${location.origin}#/v/${c.id}`)}>
+                <Button size="sm" variant="ghost" onClick={() => navigator.clipboard.writeText(c.pageUrl)} title="public link">
                   copy link
                 </Button>
                 <Button size="sm" variant="ghost" className="text-destructive" onClick={() => remove(c.id)}>

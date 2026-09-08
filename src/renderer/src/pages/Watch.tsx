@@ -63,12 +63,20 @@ export default function Watch() {
               size="sm"
               variant="ghost"
               onClick={() => {
-                navigator.clipboard.writeText(location.href)
-                toast.success("link copied")
+                navigator.clipboard.writeText(meta.pageUrl)
+                toast.success("public link copied")
               }}
             >
               <Link2 size={14} className="mr-1.5" />
               copy link
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => window.open(meta.pageUrl, "_blank")}
+              title="open on clips.roraaaa.dev (embeds work there)"
+            >
+              open on site
             </Button>
             {user && (
               <Button size="sm" variant="ghost" onClick={() => navigate(`/studio?clip=${meta.id}`)}>

@@ -1,6 +1,7 @@
 import { Fragment, useCallback, useEffect, useRef, useState } from "react"
 import { useNavigate, useSearchParams } from "react-router"
 import { api } from "@/lib/api"
+import type { RenderProgress } from "@/lib/types"
 import { useUser } from "@/lib/user-store"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
@@ -160,6 +161,47 @@ function StudioInner() {
     return () => window.removeEventListener("aurorable:preview-ready", onPreview)
   }, [])
 
+  // one-click preview render (480p proxy)
+  const previewTimer = useRef<ReturnType<typeof setInterval> | null>(null)
+  const startPreview = async () => {
+    if (!project.segments.length) {
+      toast.error("add at least one clip to the timeline")
+      return
+    }
+    try {
+      const r = await api<{ ok: boolean; jobId: string }>("/api/me/videos/render", {
+        body: { segments: project.segments.map(toWireSegment), preview: true, title: project.title || "preview" }
+      })
+      toast.info("preview render started")
+      if (previewTimer.current) clearInterval(previewTimer.current)
+      previewTimer.current = setInterval(async () => {
+        try {
+          const j = await api<RenderProgress>(`/api/me/videos/render/${r.jobId}/progress`)
+          if (j.status === "done") {
+            if (previewTimer.current) clearInterval(previewTimer.current)
+            if (j.isPreview && j.previewUrl) {
+              window.dispatchEvent(new CustomEvent("aurorable:preview-ready", { detail: { url: j.previewUrl } }))
+            }
+            toast.success("preview ready")
+          } else if (j.status === "error") {
+            if (previewTimer.current) clearInterval(previewTimer.current)
+            toast.error(j.error ?? "preview render failed")
+          }
+        } catch {
+          /* ignore */
+        }
+      }, 1200)
+    } catch (e) {
+      toast.error((e as Error).message)
+    }
+  }
+
+  useEffect(() => {
+    return () => {
+      if (previewTimer.current) clearInterval(previewTimer.current)
+    }
+  }, [])
+
   // mark in/out
   const onMark = useCallback(
     (edge: "in" | "out") => {
@@ -295,9 +337,12 @@ function StudioInner() {
         <Button size="sm" variant="ghost" onClick={() => setHelpOpen(true)} title="shortcuts (?/h)">
           ?
         </Button>
-        <Button size="sm" variant="ghost" onClick={() => navigate("/clips")}>
+                <Button size="sm" variant="ghost" onClick={() => navigate("/clips")}>
           <Film size={14} className="mr-1.5" />
           clips
+        </Button>
+        <Button size="sm" variant="ghost" onClick={() => void startPreview()} title="render a 480p preview of the timeline">
+          preview
         </Button>
         <Button size="sm" onClick={() => setRenderOpen(true)}>
           render

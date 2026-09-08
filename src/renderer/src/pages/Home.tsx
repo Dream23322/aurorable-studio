@@ -22,6 +22,7 @@ export default function Home() {
   const navigate = useNavigate()
   const [items, setItems] = useState<Item[]>([])
   const [clips, setClips] = useState<LiveVideo[]>([])
+  const [quota, setQuota] = useState({ clipCount: 0, freeClipQuota: 10 })
   const [dragging, setDragging] = useState(false)
   const itemsRef = useRef<Item[]>([])
 
@@ -32,7 +33,12 @@ export default function Home() {
   const loadClips = useCallback(async () => {
     if (!user) return
     try {
-      setClips(await api<LiveVideo[]>("/api/me/videos"))
+      const [list, q] = await Promise.all([
+        api<LiveVideo[]>("/api/me/videos"),
+        api<{ clipCount: number; freeClipQuota: number }>("/api/me/quota")
+      ])
+      setClips(list)
+      setQuota(q)
     } catch {
       /* ignore */
     }
@@ -157,6 +163,23 @@ export default function Home() {
       {user && (
         <>
           <h2 className="mb-3 text-lg text-aurora-pink"># recent clips</h2>
+          <div className="mb-4 max-w-md">
+            <div className="mb-1 flex justify-between text-xs">
+              <span className="text-muted-foreground">storage quota</span>
+              <span className="text-aurora-pink">
+                {quota.clipCount}/{quota.freeClipQuota} free clips
+              </span>
+            </div>
+            <div className="h-1.5 overflow-hidden rounded bg-background">
+              <div
+                className="h-full"
+                style={{
+                  width: `${Math.min(100, (quota.clipCount / quota.freeClipQuota) * 100)}%`,
+                  background: "linear-gradient(90deg, var(--pink-deep), var(--pink-bright))"
+                }}
+              />
+            </div>
+          </div>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
             {clips.slice(0, 8).map((c) => (
               <div key={c.id} className="overflow-hidden rounded-lg border transition-colors hover:border-aurora-bright" style={{ borderColor: "var(--border)", background: "var(--bg-elev)" }}>
