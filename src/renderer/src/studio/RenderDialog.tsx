@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react"
 import { api } from "@/lib/api"
 import type { LocalRenderProgress, RenderProgress } from "@/lib/types"
 import { useProject } from "./store"
-import { toWireSegment } from "./segments"
+import { toWireSegment, clipDuration } from "./segments"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import {
@@ -32,17 +32,44 @@ interface JobView {
 
 export function RenderDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
   const { project } = useProject()
-  const [mode, setMode] = useState<"server" | "local">("server")
-  const [tier, setTier] = useState<"preview" | "draft" | "final">("final")
-  const [crf, setCrf] = useState(18)
-  const [hwEnc, setHwEnc] = useState(false)
-  const [stretch, setStretch] = useState(false)
-  const [bgMusicId, setBgMusicId] = useState("")
+  const [mode, setModeState] = useState<"server" | "local">(() => (localStorage.getItem("aur.render.mode") as "server" | "local") ?? "server")
+  const [tier, setTierState] = useState<"preview" | "draft" | "final">(() => (localStorage.getItem("aur.render.tier") as "preview" | "draft" | "final") ?? "final")
+  const [crf, setCrfState] = useState(() => Number(localStorage.getItem("aur.render.crf") ?? 18))
+  const [hwEnc, setHwEncState] = useState(() => localStorage.getItem("aur.render.hw") === "1")
+  const [stretch, setStretchState] = useState(() => localStorage.getItem("aur.render.stretch") === "1")
+  const [bgMusicId, setBgMusicIdState] = useState(() => localStorage.getItem("aur.render.bgmusic") ?? "")
   const [bgMusicVol, setBgMusicVol] = useState(0.5)
   const [audioLib, setAudioLib] = useState<AudioItem[]>([])
   const [job, setJob] = useState<JobView | null>(null)
   const [logs, setLogs] = useState<string[]>([])
   const [error, setError] = useState("")
+
+  const setMode = (v: "server" | "local") => {
+    setModeState(v)
+    localStorage.setItem("aur.render.mode", v)
+  }
+  const setTier = (v: "preview" | "draft" | "final") => {
+    setTierState(v)
+    localStorage.setItem("aur.render.tier", v)
+  }
+  const setCrf = (v: number) => {
+    setCrfState(v)
+    localStorage.setItem("aur.render.crf", String(v))
+  }
+  const setHwEnc = (v: boolean) => {
+    setHwEncState(v)
+    localStorage.setItem("aur.render.hw", v ? "1" : "0")
+  }
+  const setStretch = (v: boolean) => {
+    setStretchState(v)
+    localStorage.setItem("aur.render.stretch", v ? "1" : "0")
+  }
+  const setBgMusic = (v: string) => {
+    setBgMusicIdState(v)
+    localStorage.setItem("aur.render.bgmusic", v)
+  }
+
+  const totalOut = project.segments.reduce((s, c) => s + clipDuration(c), 0)
 
   useEffect(() => {
     if (!open) return
@@ -159,7 +186,9 @@ export function RenderDialog({ open, onOpenChange }: { open: boolean; onOpenChan
       <DialogContent className="max-h-[85vh] w-[480px] overflow-auto">
         <DialogHeader>
           <DialogTitle className="text-aurora-pink">render</DialogTitle>
-          <DialogDescription>renders through the site's engine — server-side or on your PC via the worker.</DialogDescription>
+          <DialogDescription>
+            {project.segments.length} clips · {Math.round(totalOut)}s · renders through the site's engine — server-side or on your PC via the worker.
+          </DialogDescription>
         </DialogHeader>
 
         {!job ? (
@@ -200,7 +229,7 @@ export function RenderDialog({ open, onOpenChange }: { open: boolean; onOpenChan
                 </div>
                 <div className="grid gap-1.5">
                   <Label className="text-xs">background music</Label>
-                  <select value={bgMusicId} onChange={(e) => setBgMusicId(e.target.value)} className="rounded border bg-background px-2 py-1.5 text-sm">
+                  <select value={bgMusicId} onChange={(e) => setBgMusic(e.target.value)} className="rounded border bg-background px-2 py-1.5 text-sm">
                     <option value="">none</option>
                     {audioLib.map((a) => (
                       <option key={a.id} value={a.id}>

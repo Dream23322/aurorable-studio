@@ -236,6 +236,11 @@ export function Inspector() {
             </Button>
           </div>
         )}
+        {!(clip.speedPoints ?? []).length && (
+          <Button size="sm" variant="ghost" onClick={() => { pushUndo(); setClip((c) => { c.speedPoints ??= []; c.speedPoints.push({ at: 0.5, speed: c.speed || 1 }); c.speedPoints.sort((a, b) => a.at - b.at) }) }}>
+            + ramp
+          </Button>
+        )}
 
         <Slider label="volume" min={-30} max={10} step={1} value={clip.volumeDb} onchange={(v) => setClip((c) => { c.volumeDb = v })} />
         <div className="flex gap-4 text-xs">

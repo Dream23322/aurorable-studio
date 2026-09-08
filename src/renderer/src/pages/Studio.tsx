@@ -98,6 +98,10 @@ function StudioInner() {
       })
       setProjectId(id)
       setSaveState("saved")
+      // keep the session id in the URL so reloads/deep links work
+      if (!location.search.includes("session=")) {
+        window.history.replaceState({}, "", `${location.pathname}?session=${id}`)
+      }
       if (!quiet) toast.success("project saved")
     } catch (e) {
       setSaveState("dirty")
