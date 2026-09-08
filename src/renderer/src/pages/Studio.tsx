@@ -202,6 +202,9 @@ function StudioInner() {
           window.dispatchEvent(new CustomEvent("aurorable:copy-clip"))
         } else if (e.key === "v") {
           window.dispatchEvent(new CustomEvent("aurorable:paste-clip"))
+        } else if (e.key === "d") {
+          e.preventDefault()
+          window.dispatchEvent(new CustomEvent("aurorable:duplicate"))
         }
         return
       }
@@ -245,7 +248,8 @@ function StudioInner() {
           break
         case "Delete":
         case "Backspace":
-          window.dispatchEvent(new CustomEvent("aurorable:delete"))
+          if (e.shiftKey) window.dispatchEvent(new CustomEvent("aurorable:ripple-delete"))
+          else window.dispatchEvent(new CustomEvent("aurorable:delete"))
           break
         case "ArrowLeft":
           window.dispatchEvent(new CustomEvent("aurorable:nav-clip", { detail: { dir: -1 } }))
@@ -332,7 +336,8 @@ function StudioInner() {
               ["m", "add marker at playhead"],
               ["j / k / l", "back / pause / forward"],
               ["← / →", "previous / next clip"],
-              ["del", "delete selected clip"],
+              ["del / shift+del", "delete / ripple delete"],
+              ["ctrl+d", "duplicate clip"],
               ["ctrl+z / ctrl+shift+z", "undo / redo"],
               ["ctrl+c / ctrl+v", "copy / paste clip settings"],
               ["ctrl+s", "save project"],

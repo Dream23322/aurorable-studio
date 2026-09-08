@@ -125,6 +125,9 @@ export function Timeline() {
             s.timelineStart = d.origTimelineStart + (newIn - d.origIn)
           }
         })
+        // trim scrub: preview the exact frame at the new edge
+        const edgeTime = seg.timelineStart + (newIn - d.origIn)
+        window.dispatchEvent(new CustomEvent("aurorable:seek", { detail: { time: edgeTime } }))
       } else {
         let newOut = clamp(d.origOut + dt, d.origIn + 0.1, sourceDur(d.uid))
         const edge = seg.timelineStart + (newOut - d.origOut)
@@ -135,6 +138,9 @@ export function Timeline() {
           const s = p.segments.find((c) => c.uid === d.uid)
           if (s) s.end = newOut
         })
+        // trim scrub: preview the frame at the new out point
+        const edgeTime = seg.timelineStart + (newOut - d.origOut)
+        window.dispatchEvent(new CustomEvent("aurorable:seek", { detail: { time: edgeTime } }))
       }
     }
     const onUp = () => {
@@ -192,25 +198,65 @@ export function Timeline() {
     })
   }, [project.segments, selectedUid, playhead, pushUndo, mutate, setSelectedUid])
 
-  const removeSelected = useCallback(() => {
-    if (!selectedUid) return
+  const removeSelected = useCallback(
+    (ripple = false) => {
+      if (!selectedUid) return
+      pushUndo()
+      const removed = project.segments.find((c) => c.uid === selectedUid)
+      mutate((p) => {
+        if (ripple && removed) {
+          const dur = clipDuration(removed)
+          const start = removed.timelineStart
+          p.segments = p.segments
+            .filter((c) => c.uid !== selectedUid)
+            .map((c) => (c.timelineStart >= start ? { ...c, timelineStart: Math.max(0, c.timelineStart - dur) } : c))
+        } else {
+          p.segments = p.segments.filter((c) => c.uid !== selectedUid)
+        }
+      })
+      setSelectedUid(null)
+    },
+    [selectedUid, pushUndo, mutate, setSelectedUid, project.segments]
+  )
+
+  const duplicate = useCallback(() => {
+    const clip = project.segments.find((c) => c.uid === selectedUid)
+    if (!clip) return
     pushUndo()
+    const dur = clipDuration(clip)
     mutate((p) => {
-      p.segments = p.segments.filter((c) => c.uid !== selectedUid)
+      const s = p.segments.find((c) => c.uid === clip.uid)
+      if (!s) return
+      const clone: TimelineClip = structuredClone(s)
+      clone.uid = crypto.randomUUID()
+      clone.timelineStart = s.timelineStart + dur
+      p.segments.splice(p.segments.indexOf(s) + 1, 0, clone)
+      setSelectedUid(clone.uid)
     })
-    setSelectedUid(null)
-  }, [selectedUid, pushUndo, mutate, setSelectedUid])
+  }, [project.segments, selectedUid, pushUndo, mutate, setSelectedUid])
+
+  const fitZoom = useCallback(() => {
+    const el = scrollRef.current
+    if (!el || total <= 0) return
+    setPps(clamp((el.clientWidth - 90) / total, 20, 400))
+  }, [total])
 
   useEffect(() => {
     const onSplit = () => split()
-    const onDelete = () => removeSelected()
+    const onDelete = () => removeSelected(false)
+    const onRippleDelete = () => removeSelected(true)
+    const onDuplicate = () => duplicate()
     window.addEventListener("aurorable:split", onSplit)
     window.addEventListener("aurorable:delete", onDelete)
+    window.addEventListener("aurorable:ripple-delete", onRippleDelete)
+    window.addEventListener("aurorable:duplicate", onDuplicate)
     return () => {
       window.removeEventListener("aurorable:split", onSplit)
       window.removeEventListener("aurorable:delete", onDelete)
+      window.removeEventListener("aurorable:ripple-delete", onRippleDelete)
+      window.removeEventListener("aurorable:duplicate", onDuplicate)
     }
-  }, [split, removeSelected])
+  }, [split, removeSelected, duplicate])
 
   const rulerTicks: Array<{ t: number; major: boolean }> = []
   {
@@ -236,8 +282,11 @@ export function Timeline() {
         <Button size="sm" variant="ghost" onClick={split} title="split at playhead (S)">
           ✂ split
         </Button>
-        <Button size="sm" variant="ghost" onClick={removeSelected} title="delete (Del)">
+        <Button size="sm" variant="ghost" onClick={() => removeSelected(false)} title="delete (Del)">
           del
+        </Button>
+        <Button size="sm" variant="ghost" onClick={() => removeSelected(true)} title="ripple delete (shift+del)">
+          ripple
         </Button>
         <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
           <input type="checkbox" checked={snapEnabled} onChange={(e) => setSnapEnabled(e.target.checked)} />
@@ -251,8 +300,17 @@ export function Timeline() {
         <Button size="sm" variant="ghost" onClick={() => setPps((p) => clamp(p * 1.3, 20, 400))}>
           +
         </Button>
+        <Button size="sm" variant="ghost" onClick={fitZoom} title="fit timeline">
+          fit
+        </Button>
         <span className="w-16 text-right text-xs text-muted-foreground">{pps}px/s</span>
       </div>
+
+      {project.segments.length === 0 && (
+        <div className="border-b px-3 py-1 text-xs text-muted-foreground" style={{ borderColor: "var(--border)" }}>
+          timeline is empty — click a clip in the bin to add it.
+        </div>
+      )}
 
       <div ref={scrollRef} onWheel={onWheel} className="min-h-0 flex-1 overflow-auto">
         <div className="relative" style={{ width: Math.max(projectDuration(project) * pps, 600) }}>
