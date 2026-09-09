@@ -208,7 +208,7 @@ export function RenderDialog({ open, onOpenChange }: { open: boolean; onOpenChan
               <span className="text-muted-foreground">{job.status}</span>
               <span className="text-muted-foreground">{job.percent}%</span>
             </div>
-            <div className="h-2 overflow-hidden rounded bg-background">
+            <div className="aur-well h-2 overflow-hidden">
               <div className="h-full transition-all" style={{ width: `${job.percent}%`, background: "linear-gradient(90deg, var(--pink-deep), var(--pink-bright))" }} />
             </div>
             {job.status === "error" && (

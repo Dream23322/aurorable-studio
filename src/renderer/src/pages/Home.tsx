@@ -142,7 +142,7 @@ export default function Home() {
                 <span className="truncate text-sm">{it.name}</span>
                 <span className="text-xs text-muted-foreground">{it.state}</span>
               </div>
-              <div className="mt-2 h-2 overflow-hidden rounded bg-background">
+              <div className="aur-well mt-2 h-2 overflow-hidden">
                 <div className="h-full transition-all" style={{ width: `${it.progress}%`, background: "linear-gradient(90deg, var(--pink-deep), var(--pink-bright))" }} />
               </div>
               <div className="mt-1.5 flex items-center justify-between text-xs">
