@@ -15,6 +15,9 @@ import ProfileEdit from "@/pages/ProfileEdit"
 import Account from "@/pages/Account"
 import Studio from "@/pages/Studio"
 
+function App() {
+  const { offline } = useUser()
+
   return (
     <div className="relative flex h-full flex-col overflow-hidden">
       <Titlebar />
