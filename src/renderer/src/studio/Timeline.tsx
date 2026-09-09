@@ -360,7 +360,7 @@ export function Timeline() {
             className="relative h-12 cursor-pointer border-b"
             style={{
               borderColor: "var(--border)",
-              background: "repeating-linear-gradient(90deg, transparent 0 39px, rgba(255,93,146,0.05) 39px 40px)"
+              background: "repeating-linear-gradient(90deg, transparent 0 39px, rgba(95,162,232,0.07) 39px 40px)"
             }}
             onClick={onTrackClick}
           >
@@ -452,7 +452,7 @@ export function Timeline() {
                       return (
                         <svg className="h-full w-full" preserveAspectRatio="none" viewBox={`0 0 ${peaks.length} 1`}>
                           {peaks.map((p, i) => (
-                            <rect key={i} x={i} y={(1 - p) / 2} width="1" height={Math.max(0.02, p)} fill="rgba(255,143,179,0.55)" />
+                            <rect key={i} x={i} y={(1 - p) / 2} width="1" height={Math.max(0.02, p)} fill="rgba(125,180,240,0.6)" />
                           ))}
                         </svg>
                       )

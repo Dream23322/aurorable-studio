@@ -138,7 +138,7 @@ export function Preview({ previewUrl }: { previewUrl?: string | null }) {
         const bw = W / 32
         for (let i = 0; i < 32; i++) {
           const bh = (hist[i] / max) * (H - 6)
-          ctx.fillStyle = `rgba(255,93,146,${0.5 + (i / 32) * 0.5})`
+          ctx.fillStyle = `rgba(95,162,232,${0.5 + (i / 32) * 0.5})`
           ctx.fillRect(i * bw, H - bh, bw - 1, bh)
         }
       } catch {

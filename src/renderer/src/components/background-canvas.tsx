@@ -39,7 +39,7 @@ export function BackgroundCanvas({ kind }: { kind: string }) {
           const a = 0.3 + Math.sin(Date.now() / 400 + st.x * 20) * 0.3
           ctx.beginPath()
           ctx.arc(st.x * w(), st.y * h(), st.r, 0, Math.PI * 2)
-          ctx.fillStyle = `rgba(255,143,179,${a})`
+          ctx.fillStyle = `rgba(125,180,240,${a})`
           ctx.fill()
         }
         raf = requestAnimationFrame(tick)
@@ -48,7 +48,7 @@ export function BackgroundCanvas({ kind }: { kind: string }) {
     } else if (kind === "grid") {
       const tick = () => {
         ctx.clearRect(0, 0, w(), h())
-        ctx.strokeStyle = "rgba(255,93,146,0.15)"
+        ctx.strokeStyle = "rgba(95,162,232,0.18)"
         const gap = 40
         for (let x = 0; x < w(); x += gap) {
           ctx.beginPath()
