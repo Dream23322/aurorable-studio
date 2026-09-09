@@ -4,7 +4,7 @@ export function Titlebar() {
   return (
     <div
       className="flex h-9 shrink-0 items-center gap-2 border-b px-3 select-none"
-      style={{ borderColor: "var(--border)", background: "rgba(255,255,255,0.6)" }}
+      style={{ borderColor: "var(--border)", background: "rgba(16,12,24,0.85)" }}
     >
       <span className="aur-script text-lg font-bold text-aurora-bright" style={{ textShadow: "0 0 12px rgba(var(--glow-rgb),0.5)" }}>
         aurorable
