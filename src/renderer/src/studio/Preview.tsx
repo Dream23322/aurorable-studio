@@ -171,14 +171,27 @@ export function Preview({ previewUrl }: { previewUrl?: string | null }) {
         <span className="absolute top-2 left-2 rounded bg-black/60 px-2 py-0.5 text-[11px] text-aurora-pink">{label}</span>
         <canvas ref={canvasRef} width="192" height="48" className="absolute right-2 bottom-2 h-12 w-48 rounded" />
       </div>
-      <div className="flex items-center gap-1.5 border-t px-2 py-1.5" style={{ borderColor: "var(--border)" }}>
-        <Button size="sm" variant="ghost" onClick={() => navClip(-1)} title="previous clip">
+      <div
+      className="flex items-center gap-1.5 border-t px-2 py-1.5"
+      style={{
+        borderColor: "#141b28",
+        background: "linear-gradient(180deg, #232c3d 0%, #171c27 100%)",
+        boxShadow: "inset 0 1px 0 rgba(255,255,255,0.08)"
+      }}
+    >
+        <Button size="sm" variant="ghost" className="text-white/80 hover:bg-white/10 hover:text-white" onClick={() => navClip(-1)} title="previous clip">
           <SkipBack size={14} />
         </Button>
-        <Button size="sm" variant="ghost" onClick={togglePlay} title="play/pause (space)">
+        <Button
+          size="sm"
+          variant="ghost"
+          className="aur-glossy !h-8 !w-8 !rounded-full !p-0"
+          onClick={togglePlay}
+          title="play/pause (space)"
+        >
           {playing ? <Pause size={14} /> : <Play size={14} />}
         </Button>
-        <Button size="sm" variant="ghost" onClick={() => navClip(1)} title="next clip">
+        <Button size="sm" variant="ghost" className="text-white/80 hover:bg-white/10 hover:text-white" onClick={() => navClip(1)} title="next clip">
           <SkipForward size={14} />
         </Button>
         <Button size="sm" variant="ghost" onClick={() => { const v = videoRef.current; if (v) { v.currentTime -= 1 / 30; onTimeUpdate() } }}>

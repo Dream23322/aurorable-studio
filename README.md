@@ -4,7 +4,8 @@ Aurorable — your clips, in an app. A fully standalone desktop app for the
 [aurorable site](https://clips.roraaaa.dev): the site is just where your clips
 live; this app is how you watch, cut, grade, glow and render them.
 
-Built on Electron + React 19 + Tailwind 4 + Radix UI.
+Built on Electron + React 19 + Tailwind 4 + Radix UI. Dark Y2K chrome aesthetic:
+steel bands, glossy bevels, Tahoma-small text, icy blue glow.
 
 ## What it does
 
@@ -12,8 +13,8 @@ Built on Electron + React 19 + Tailwind 4 + Radix UI.
   talks to the site's API through a local proxy (no CORS, cookies just work).
 - **Theme synced with your account.** The app applies your account theme
   (aurora / ocean / mountain / sunset / forest / midnight / peach / vapor /
-  sakura / miku / cosy) app-wide. Changing it in the app saves it back to your
-  profile — the same theme everywhere.
+  sakura / miku / cosy) as dark Y2K-tinted variants. Changing it in the app
+  saves it back to your profile — the same theme everywhere.
 - **Full site in an app.** Upload, clips dashboard, watch pages, public profiles,
   profile editor, account (worker tokens, password, export), showcase.
 - **The studio.** A professional timeline editor over the site's render engine:
