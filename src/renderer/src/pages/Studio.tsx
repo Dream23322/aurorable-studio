@@ -297,11 +297,6 @@ function StudioInner() {
     return () => window.removeEventListener("keydown", onKey)
   }, [undo, redo, onMark, save, playhead, mutate])
 
-  useEffect(() => {
-    document.body.classList.add("no-crt")
-    return () => document.body.classList.remove("no-crt")
-  }, [])
-
   return (
     <div className="flex h-full min-h-0 flex-col">
       {/* header */}

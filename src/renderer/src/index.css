@@ -217,22 +217,6 @@ body {
   background: linear-gradient(180deg, #7b93b3 0%, #4d5f7d 50%, #39465e 100%);
 }
 
-@keyframes twinkle {
-  0%, 100% { opacity: 0.2; transform: scale(0.85) rotate(0deg); }
-  50% { opacity: 0.85; transform: scale(1.1) rotate(20deg); }
-}
-
-@keyframes floaty {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-14px); }
-}
-
-@keyframes rainbow-shift {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-
 /* chrome title text (brand) */
 .aur-chrome-text {
   background: linear-gradient(180deg, #ffffff 0%, #cfe2f7 32%, #6fa8dd 50%, #e2eefa 54%, #9cc4ec 100%);

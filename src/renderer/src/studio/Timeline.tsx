@@ -278,32 +278,32 @@ export function Timeline() {
 
   return (
     <div className="flex min-h-0 flex-col" style={{ background: "var(--bg-elev)" }}>
-      <div className="flex items-center gap-2 border-b px-3 py-1.5" style={{ borderColor: "var(--border)" }}>
-        <Button size="sm" variant="ghost" onClick={split} title="split at playhead (S)">
+      <div className="aur-band flex items-center gap-2 !rounded-none !border-x-0 !border-t-0 px-3 py-1.5">
+        <Button size="sm" variant="ghost" className="text-white hover:bg-white/15 hover:text-white" onClick={split} title="split at playhead (S)">
           ✂ split
         </Button>
-        <Button size="sm" variant="ghost" onClick={() => removeSelected(false)} title="delete (Del)">
+        <Button size="sm" variant="ghost" className="text-white hover:bg-white/15 hover:text-white" onClick={() => removeSelected(false)} title="delete (Del)">
           del
         </Button>
-        <Button size="sm" variant="ghost" onClick={() => removeSelected(true)} title="ripple delete (shift+del)">
+        <Button size="sm" variant="ghost" className="text-white hover:bg-white/15 hover:text-white" onClick={() => removeSelected(true)} title="ripple delete (shift+del)">
           ripple
         </Button>
-        <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
+        <label className="flex items-center gap-1.5 text-xs text-white/80">
           <input type="checkbox" checked={snapEnabled} onChange={(e) => setSnapEnabled(e.target.checked)} />
           snap
         </label>
         <div className="flex-1" />
-        <span className="text-xs text-muted-foreground">zoom</span>
-        <Button size="sm" variant="ghost" onClick={() => setPps((p) => clamp(p / 1.3, 20, 400))}>
+        <span className="text-xs text-white/70">zoom</span>
+        <Button size="sm" variant="ghost" className="text-white hover:bg-white/15 hover:text-white" onClick={() => setPps((p) => clamp(p / 1.3, 20, 400))}>
           −
         </Button>
-        <Button size="sm" variant="ghost" onClick={() => setPps((p) => clamp(p * 1.3, 20, 400))}>
+        <Button size="sm" variant="ghost" className="text-white hover:bg-white/15 hover:text-white" onClick={() => setPps((p) => clamp(p * 1.3, 20, 400))}>
           +
         </Button>
-        <Button size="sm" variant="ghost" onClick={fitZoom} title="fit timeline">
+        <Button size="sm" variant="ghost" className="text-white hover:bg-white/15 hover:text-white" onClick={fitZoom} title="fit timeline">
           fit
         </Button>
-        <span className="w-16 text-right text-xs text-muted-foreground">{pps}px/s</span>
+        <span className="w-16 text-right text-xs text-white/70">{pps}px/s</span>
       </div>
 
       {project.segments.length === 0 && (
