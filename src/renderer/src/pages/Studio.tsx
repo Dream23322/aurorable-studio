@@ -346,9 +346,7 @@ function StudioInner() {
           <ClipsBin />
           <Preview previewUrl={previewUrl} />
           <div className="flex min-h-0 flex-col border-l" style={{ borderColor: "var(--border)" }}>
-            <div className="border-b px-3 py-2 text-xs font-semibold text-aurora-pink" style={{ borderColor: "var(--border)" }}>
-              inspector
-            </div>
+            <div className="aur-band m-1.5 mb-0 px-2 py-1 text-[11px] font-bold tracking-wider">inspector</div>
             <Inspector />
           </div>
         </div>

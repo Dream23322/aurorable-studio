@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { toast } from "sonner"
 import { FolderOpen, Trash2 } from "lucide-react"
+import { BandTitle } from "@/components/band-title"
 
 export default function Clips() {
   const { user } = useUser()
@@ -78,7 +79,7 @@ export default function Clips() {
   return (
     <div className="h-full overflow-auto p-6">
       <div className="mb-4 flex flex-wrap items-center gap-3">
-        <h1 className="text-xl font-bold text-aurora-bright">my clips</h1>
+        <BandTitle className="text-sm">my clips</BandTitle>
         <span className="text-xs text-muted-foreground">
           {user?.username} · {quota.clipCount}/{quota.freeClipQuota} free
         </span>

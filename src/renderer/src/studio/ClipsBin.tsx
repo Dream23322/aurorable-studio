@@ -33,8 +33,8 @@ export function ClipsBin() {
 
   return (
     <div className="flex min-h-0 flex-col" style={{ background: "var(--bg-elev)" }}>
-      <div className="flex items-center justify-between border-b px-3 py-2" style={{ borderColor: "var(--border)" }}>
-        <span className="text-xs font-semibold text-aurora-pink">clips</span>
+      <div className="flex items-center justify-between px-2 pt-2">
+        <span className="aur-band flex-1 px-2 py-1 text-[11px] font-bold tracking-wider">clips</span>
         <Button size="sm" variant="ghost" onClick={() => void load()}>
           <RefreshCw size={12} />
         </Button>

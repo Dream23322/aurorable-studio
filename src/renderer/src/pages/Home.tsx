@@ -7,6 +7,7 @@ import { useUser } from "@/lib/user-store"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 import { UploadCloud } from "lucide-react"
+import { BandTitle } from "@/components/band-title"
 
 interface Item {
   id: string
@@ -94,9 +95,9 @@ export default function Home() {
 
   return (
     <div className="h-full overflow-auto p-6">
-      <h1 className="mb-1 text-2xl font-bold text-aurora-bright">
-        game clips, but <span className="text-aurora-bright">professional</span>
-        <span className="animate-pulse">▊</span>
+      <h1 className="mb-1 text-3xl font-bold">
+        <span className="aur-chrome-text">game clips, but professional</span>
+        <span className="animate-pulse text-aurora-bright">▊</span>
       </h1>
       <p className="mb-6 max-w-xl text-sm text-muted-foreground">
         your clips live on the site — this app is how you cut, grade, glow and render them, on your own PC if you want.
@@ -162,7 +163,7 @@ export default function Home() {
 
       {user && (
         <>
-          <h2 className="mb-3 text-lg text-aurora-pink"># recent clips</h2>
+          <BandTitle className="mb-3"># recent clips</BandTitle>
           <div className="mb-4 max-w-md">
             <div className="mb-1 flex justify-between text-xs">
               <span className="text-muted-foreground">storage quota</span>

@@ -6,10 +6,10 @@ export function Titlebar() {
       className="flex h-9 shrink-0 items-center gap-2 border-b px-3 select-none"
       style={{ borderColor: "#2a3547", background: "linear-gradient(180deg, #5d6b80 0%, #46536a 100%)" }}
     >
-      <span className="text-[15px] font-bold tracking-wide text-white" style={{ textShadow: "0 1px 2px rgba(0,0,0,0.5)" }}>
+      <span className="aur-chrome-text text-[17px] font-bold tracking-wide">
         aurorable
       </span>
-      <span className="text-xs text-white/70">studio</span>
+      <span className="text-[11px] font-bold tracking-[0.2em] text-white/60">STUDIO</span>
       <span className="flex-1" style={{ WebkitAppRegion: "drag" } as React.CSSProperties} />
       <div className="flex items-center gap-1">
         <button
