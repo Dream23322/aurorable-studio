@@ -106,13 +106,6 @@ export interface ShowcaseProfile {
   avatarUrl: string | null
 }
 
-export interface WorkerToken {
-  id: string
-  name: string
-  created_at: number
-  online: boolean
-}
-
 export interface StudioSessionMeta {
   id: string
   title: string

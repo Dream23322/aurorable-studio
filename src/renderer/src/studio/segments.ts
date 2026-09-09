@@ -54,6 +54,9 @@ export interface Segment {
   motionBlur?: number
   motionBlurIntensity?: number
   motionBlurMode?: MotionBlurMode
+  brightness?: number
+  contrast?: number
+  saturation?: number
   chromaShiftH?: number
   chromaShiftV?: number
   bloomThreshold?: number

@@ -281,6 +281,13 @@ export function Inspector() {
       </div>
 
       <div className="mb-3 border-t pt-3" style={{ borderColor: "var(--border)" }}>
+        <p className="mb-2 text-xs text-aurora-pink">color grade</p>
+        <Slider label="brightness" min={-0.2} max={0.2} step={0.005} value={n(clip.brightness, 0)} onchange={(v) => setClip((c) => { c.brightness = v })} />
+        <Slider label="contrast" min={-0.4} max={0.4} step={0.01} value={n(clip.contrast, 0)} onchange={(v) => setClip((c) => { c.contrast = v })} />
+        <Slider label="saturation" min={-0.6} max={0.6} step={0.01} value={n(clip.saturation, 0)} onchange={(v) => setClip((c) => { c.saturation = v })} />
+      </div>
+
+      <div className="mb-3 border-t pt-3" style={{ borderColor: "var(--border)" }}>
         <p className="mb-2 text-xs text-aurora-pink">motion blur</p>
         <Slider label="frames" min={0} max={16} step={1} value={n(clip.motionBlur, 0)} onchange={(v) => setClip((c) => { c.motionBlur = v })} />
         <Slider label="intensity" min={0.1} max={1} step={0.05} value={n(clip.motionBlurIntensity, 0.5)} onchange={(v) => setClip((c) => { c.motionBlurIntensity = v })} />

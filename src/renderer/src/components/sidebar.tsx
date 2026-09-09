@@ -1,10 +1,10 @@
 import { NavLink, useNavigate } from "react-router"
-import { Clapperboard, Film, Flower2, Home, LogIn, LogOut, Settings, Sparkles, User } from "lucide-react"
+import { Clapperboard, Film, Heart, Home, LogIn, LogOut, Settings, User } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useUser } from "@/lib/user-store"
 
 const item =
-  "flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[13px] transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+  "flex items-center gap-2.5 rounded-full px-3 py-1.5 text-[13px] transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
 
 function Nav({ to, icon, label, end }: { to: string; icon: React.ReactNode; label: string; end?: boolean }) {
   return (
@@ -28,14 +28,13 @@ export function Sidebar() {
         <Nav to="/" icon={<Home size={14} />} label="home" end />
         {user && <Nav to="/clips" icon={<Film size={14} />} label="clips" />}
         {user && <Nav to="/studio" icon={<Clapperboard size={14} />} label="studio" />}
-        <Nav to="/showcase" icon={<Sparkles size={14} />} label="showcase" />
       </nav>
 
       <div className="flex-1" />
 
       {user ? (
         <nav className="flex flex-col gap-1">
-          <Nav to={`/u/${user.username ?? ""}`} icon={<Flower2 size={14} />} label="@me" />
+          <Nav to={`/u/${user.username ?? ""}`} icon={<Heart size={14} />} label="@me" />
           <Nav to="/profile" icon={<User size={14} />} label="edit profile" />
           <Nav to="/account" icon={<Settings size={14} />} label="account" />
           <button

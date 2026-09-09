@@ -45,7 +45,6 @@ function StudioInner() {
 
   const [saveState, setSaveState] = useState<"saved" | "dirty" | "saving">("saved")
   const [renderOpen, setRenderOpen] = useState(false)
-  const [workerOnline, setWorkerOnline] = useState(0)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [helpOpen, setHelpOpen] = useState(false)
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -146,17 +145,6 @@ function StudioInner() {
     })()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user])
-
-  // worker status
-  useEffect(() => {
-    const check = () =>
-      api<{ online: number }>("/api/me/workers/status")
-        .then((r) => setWorkerOnline(r.online))
-        .catch(() => {})
-    void check()
-    const t = setInterval(check, 15000)
-    return () => clearInterval(t)
-  }, [])
 
   // proxy previews arrive via event
   useEffect(() => {
@@ -331,7 +319,6 @@ function StudioInner() {
           {saveState === "saved" ? "saved" : saveState === "saving" ? "saving…" : "unsaved"}
         </span>
         <div className="flex-1" />
-        <span className="text-xs text-muted-foreground">{workerOnline > 0 ? "● worker online" : "○ worker offline"}</span>
         <Button size="sm" variant="ghost" onClick={undo} disabled={!canUndo} title="undo (ctrl+z)">
           <Undo2 size={14} />
         </Button>

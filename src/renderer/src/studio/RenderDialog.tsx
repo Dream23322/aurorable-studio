@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react"
 import { api } from "@/lib/api"
-import type { LocalRenderProgress, RenderProgress } from "@/lib/types"
+import type { RenderProgress } from "@/lib/types"
 import { useProject } from "./store"
 import { toWireSegment, clipDuration } from "./segments"
 import { Button } from "@/components/ui/button"
@@ -21,7 +21,6 @@ interface AudioItem {
 }
 
 interface JobView {
-  kind: "server" | "local"
   id: string
   status: string
   percent: number
@@ -32,7 +31,6 @@ interface JobView {
 
 export function RenderDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
   const { project } = useProject()
-  const [mode, setModeState] = useState<"server" | "local">(() => (localStorage.getItem("aur.render.mode") as "server" | "local") ?? "server")
   const [tier, setTierState] = useState<"preview" | "draft" | "final">(() => (localStorage.getItem("aur.render.tier") as "preview" | "draft" | "final") ?? "final")
   const [crf, setCrfState] = useState(() => Number(localStorage.getItem("aur.render.crf") ?? 18))
   const [hwEnc, setHwEncState] = useState(() => localStorage.getItem("aur.render.hw") === "1")
@@ -44,10 +42,6 @@ export function RenderDialog({ open, onOpenChange }: { open: boolean; onOpenChan
   const [logs, setLogs] = useState<string[]>([])
   const [error, setError] = useState("")
 
-  const setMode = (v: "server" | "local") => {
-    setModeState(v)
-    localStorage.setItem("aur.render.mode", v)
-  }
   const setTier = (v: "preview" | "draft" | "final") => {
     setTierState(v)
     localStorage.setItem("aur.render.tier", v)
@@ -93,7 +87,6 @@ export function RenderDialog({ open, onOpenChange }: { open: boolean; onOpenChan
       try {
         const j = await api<RenderProgress>(`/api/me/videos/render/${id}/progress`)
         setJob({
-          kind: "server",
           id,
           status: j.status,
           percent: j.percent,
@@ -119,23 +112,6 @@ export function RenderDialog({ open, onOpenChange }: { open: boolean; onOpenChan
     timers.current.push(timer)
   }
 
-  const pollLocal = (id: string) => {
-    const timer = setInterval(async () => {
-      try {
-        const j = await api<LocalRenderProgress>(`/api/me/render/local/${id}/progress`)
-        setJob({ kind: "local", id, status: j.status, percent: j.percent, error: j.error, clipId: j.clipId })
-        if (j.status === "done" || j.status === "error") {
-          clearInterval(timer)
-          timers.current = timers.current.filter((t) => t !== timer)
-          if (j.status === "error") setLogs((j.stderr ?? "").split("\n").filter(Boolean).slice(-30))
-        }
-      } catch {
-        /* ignore */
-      }
-    }, 1500)
-    timers.current.push(timer)
-  }
-
   const submit = async () => {
     setError("")
     setJob(null)
@@ -145,21 +121,7 @@ export function RenderDialog({ open, onOpenChange }: { open: boolean; onOpenChan
       return
     }
     const segments = project.segments.map(toWireSegment)
-    const sourceIds = [...new Set(project.segments.map((c) => c.sourceId))]
     const bgMusic = bgMusicId ? { audioId: bgMusicId, volume: bgMusicVol } : undefined
-
-    if (mode === "local") {
-      try {
-        const r = await api<{ ok: boolean; jobId: string }>("/api/me/render/local", {
-          body: { title: project.title || "studio render", segments, sourceIds }
-        })
-        setJob({ kind: "local", id: r.jobId, status: "queued", percent: 0 })
-        pollLocal(r.jobId)
-      } catch (e) {
-        setError((e as Error).message)
-      }
-      return
-    }
 
     try {
       const r = await api<{ ok: boolean; jobId: string }>("/api/me/videos/render", {
@@ -174,7 +136,7 @@ export function RenderDialog({ open, onOpenChange }: { open: boolean; onOpenChan
           bgMusic
         }
       })
-      setJob({ kind: "server", id: r.jobId, status: "running", percent: 0 })
+      setJob({ id: r.jobId, status: "running", percent: 0 })
       pollServer(r.jobId)
     } catch (e) {
       setError((e as Error).message)
@@ -187,67 +149,55 @@ export function RenderDialog({ open, onOpenChange }: { open: boolean; onOpenChan
         <DialogHeader>
           <DialogTitle className="text-aurora-pink">render</DialogTitle>
           <DialogDescription>
-            {project.segments.length} clips · {Math.round(totalOut)}s · renders through the site's engine — server-side or on your PC via the worker.
+            {project.segments.length} clips · {Math.round(totalOut)}s · rendered by the site's engine.
           </DialogDescription>
         </DialogHeader>
 
         {!job ? (
           <div className="flex flex-col gap-3">
             <div className="grid gap-1.5">
-              <Label className="text-xs">render where</Label>
-              <select value={mode} onChange={(e) => setMode(e.target.value as "server" | "local")} className="rounded border bg-background px-2 py-1.5 text-sm">
-                <option value="server">on the site's server</option>
-                <option value="local">on my PC (worker)</option>
+              <Label className="text-xs">quality</Label>
+              <select value={tier} onChange={(e) => setTier(e.target.value as never)} className="rounded border bg-background px-2 py-1.5 text-sm">
+                <option value="preview">preview (480p, fast)</option>
+                <option value="draft">draft (720p)</option>
+                <option value="final">final (full res)</option>
               </select>
             </div>
-
-            {mode === "server" && (
-              <>
-                <div className="grid gap-1.5">
-                  <Label className="text-xs">quality</Label>
-                  <select value={tier} onChange={(e) => setTier(e.target.value as never)} className="rounded border bg-background px-2 py-1.5 text-sm">
-                    <option value="preview">preview (480p, fast)</option>
-                    <option value="draft">draft (720p)</option>
-                    <option value="final">final (full res)</option>
-                  </select>
+            <div className="grid gap-1">
+              <div className="flex justify-between text-xs">
+                <span className="text-muted-foreground">crf ({crf}) — lower = better</span>
+              </div>
+              <input type="range" min={15} max={28} step={1} value={crf} disabled={tier !== "final"} onChange={(e) => setCrf(Number(e.target.value))} />
+            </div>
+            <div className="flex gap-4 text-xs">
+              <label className="flex items-center gap-1.5">
+                <input type="checkbox" checked={hwEnc} onChange={(e) => setHwEnc(e.target.checked)} />
+                gpu encode (nvenc)
+              </label>
+              <label className="flex items-center gap-1.5">
+                <input type="checkbox" checked={stretch} onChange={(e) => setStretch(e.target.checked)} />
+                4:3 → 16:9
+              </label>
+            </div>
+            <div className="grid gap-1.5">
+              <Label className="text-xs">background music</Label>
+              <select value={bgMusicId} onChange={(e) => setBgMusic(e.target.value)} className="rounded border bg-background px-2 py-1.5 text-sm">
+                <option value="">none</option>
+                {audioLib.map((a) => (
+                  <option key={a.id} value={a.id}>
+                    {a.filename}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {bgMusicId && (
+              <div className="grid gap-1">
+                <div className="flex justify-between text-xs">
+                  <span className="text-muted-foreground">music volume</span>
+                  <span className="text-aurora-pink">{bgMusicVol.toFixed(2)}</span>
                 </div>
-                <div className="grid gap-1">
-                  <div className="flex justify-between text-xs">
-                    <span className="text-muted-foreground">crf ({crf}) — lower = better</span>
-                  </div>
-                  <input type="range" min={15} max={28} step={1} value={crf} disabled={tier !== "final"} onChange={(e) => setCrf(Number(e.target.value))} />
-                </div>
-                <div className="flex gap-4 text-xs">
-                  <label className="flex items-center gap-1.5">
-                    <input type="checkbox" checked={hwEnc} onChange={(e) => setHwEnc(e.target.checked)} />
-                    gpu encode (nvenc)
-                  </label>
-                  <label className="flex items-center gap-1.5">
-                    <input type="checkbox" checked={stretch} onChange={(e) => setStretch(e.target.checked)} />
-                    4:3 → 16:9
-                  </label>
-                </div>
-                <div className="grid gap-1.5">
-                  <Label className="text-xs">background music</Label>
-                  <select value={bgMusicId} onChange={(e) => setBgMusic(e.target.value)} className="rounded border bg-background px-2 py-1.5 text-sm">
-                    <option value="">none</option>
-                    {audioLib.map((a) => (
-                      <option key={a.id} value={a.id}>
-                        {a.filename}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                {bgMusicId && (
-                  <div className="grid gap-1">
-                    <div className="flex justify-between text-xs">
-                      <span className="text-muted-foreground">music volume</span>
-                      <span className="text-aurora-pink">{bgMusicVol.toFixed(2)}</span>
-                    </div>
-                    <input type="range" min={0} max={1} step={0.05} value={bgMusicVol} onChange={(e) => setBgMusicVol(Number(e.target.value))} />
-                  </div>
-                )}
-              </>
+                <input type="range" min={0} max={1} step={0.05} value={bgMusicVol} onChange={(e) => setBgMusicVol(Number(e.target.value))} />
+              </div>
             )}
 
             {error && <p className="text-xs text-destructive">{error}</p>}
@@ -255,10 +205,7 @@ export function RenderDialog({ open, onOpenChange }: { open: boolean; onOpenChan
         ) : (
           <div className="flex flex-col gap-2">
             <div className="flex justify-between text-xs">
-              <span className="text-muted-foreground">
-                {job.status}
-                {job.kind === "local" ? " · worker" : ""}
-              </span>
+              <span className="text-muted-foreground">{job.status}</span>
               <span className="text-muted-foreground">{job.percent}%</span>
             </div>
             <div className="h-2 overflow-hidden rounded bg-background">
@@ -279,9 +226,6 @@ export function RenderDialog({ open, onOpenChange }: { open: boolean; onOpenChan
               <p className="text-xs text-aurora-good">
                 render complete. <a href={`#/v/${job.clipId}`} className="text-aurora-pink">view clip</a>
               </p>
-            )}
-            {job.status === "queued" && job.kind === "local" && (
-              <p className="text-xs text-muted-foreground">waiting for a worker to pick this up…</p>
             )}
             {(job.status === "running" || job.status === "in_progress") && (
               <p className="text-xs text-muted-foreground">rendering…</p>
