@@ -300,34 +300,34 @@ function StudioInner() {
   return (
     <div className="flex h-full min-h-0 flex-col">
       {/* header */}
-      <div className="flex h-10 shrink-0 items-center gap-2 border-b px-3" style={{ borderColor: "var(--border)", background: "var(--bg-elev)" }}>
-        <Clapperboard size={14} className="text-aurora-bright" />
-        <span className="text-sm font-bold text-aurora-bright">studio</span>
+      <div className="aur-band flex h-10 shrink-0 items-center gap-2 !rounded-none !border-x-0 !border-t-0 px-3">
+        <Clapperboard size={14} />
+        <span className="text-sm font-bold tracking-wide">studio</span>
         <input
           value={project.title}
           onChange={(e) => setTitle(e.target.value)}
           onBlur={() => void save()}
-          className="w-64 rounded border-transparent bg-transparent px-2 py-0.5 text-sm outline-none hover:border-border focus:border-aurora-bright"
+          className="w-64 rounded border-transparent bg-white/5 px-2 py-0.5 text-sm text-white outline-none hover:border-white/30 focus:border-white/50"
           placeholder="untitled project"
         />
-        <span className="text-xs text-muted-foreground">
+        <span className="text-xs text-white/70">
           {saveState === "saved" ? "saved" : saveState === "saving" ? "saving…" : "unsaved"}
         </span>
         <div className="flex-1" />
-        <Button size="sm" variant="ghost" onClick={undo} disabled={!canUndo} title="undo (ctrl+z)">
+        <Button size="sm" variant="ghost" className="text-white hover:bg-white/15 hover:text-white" onClick={undo} disabled={!canUndo} title="undo (ctrl+z)">
           <Undo2 size={14} />
         </Button>
-        <Button size="sm" variant="ghost" onClick={redo} disabled={!canRedo} title="redo (ctrl+shift+z)">
+        <Button size="sm" variant="ghost" className="text-white hover:bg-white/15 hover:text-white" onClick={redo} disabled={!canRedo} title="redo (ctrl+shift+z)">
           <Redo2 size={14} />
         </Button>
-        <Button size="sm" variant="ghost" onClick={() => setHelpOpen(true)} title="shortcuts (?/h)">
+        <Button size="sm" variant="ghost" className="text-white hover:bg-white/15 hover:text-white" onClick={() => setHelpOpen(true)} title="shortcuts (?/h)">
           ?
         </Button>
-                <Button size="sm" variant="ghost" onClick={() => navigate("/clips")}>
+                <Button size="sm" variant="ghost" className="text-white hover:bg-white/15 hover:text-white" onClick={() => navigate("/clips")}>
           <Film size={14} className="mr-1.5" />
           clips
         </Button>
-        <Button size="sm" variant="ghost" onClick={() => void startPreview()} title="render a 480p preview of the timeline">
+        <Button size="sm" variant="ghost" className="text-white hover:bg-white/15 hover:text-white" onClick={() => void startPreview()} title="render a 480p preview of the timeline">
           preview
         </Button>
         <Button size="sm" onClick={() => setRenderOpen(true)}>

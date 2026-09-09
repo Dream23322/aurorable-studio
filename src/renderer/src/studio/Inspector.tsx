@@ -281,14 +281,14 @@ export function Inspector() {
       </div>
 
       <div className="mb-3 border-t pt-3" style={{ borderColor: "var(--border)" }}>
-        <p className="mb-2 text-xs text-aurora-pink">color grade</p>
+        <p className="aur-band mb-2 px-2 py-0.5 text-[11px] font-bold tracking-wider">color grade</p>
         <Slider label="brightness" min={-0.2} max={0.2} step={0.005} value={n(clip.brightness, 0)} onchange={(v) => setClip((c) => { c.brightness = v })} />
         <Slider label="contrast" min={-0.4} max={0.4} step={0.01} value={n(clip.contrast, 0)} onchange={(v) => setClip((c) => { c.contrast = v })} />
         <Slider label="saturation" min={-0.6} max={0.6} step={0.01} value={n(clip.saturation, 0)} onchange={(v) => setClip((c) => { c.saturation = v })} />
       </div>
 
       <div className="mb-3 border-t pt-3" style={{ borderColor: "var(--border)" }}>
-        <p className="mb-2 text-xs text-aurora-pink">motion blur</p>
+        <p className="aur-band mb-2 px-2 py-0.5 text-[11px] font-bold tracking-wider">motion blur</p>
         <Slider label="frames" min={0} max={16} step={1} value={n(clip.motionBlur, 0)} onchange={(v) => setClip((c) => { c.motionBlur = v })} />
         <Slider label="intensity" min={0.1} max={1} step={0.05} value={n(clip.motionBlurIntensity, 0.5)} onchange={(v) => setClip((c) => { c.motionBlurIntensity = v })} />
         <div className="mb-2 grid gap-1">
@@ -306,25 +306,25 @@ export function Inspector() {
       </div>
 
       <div className="mb-3 border-t pt-3" style={{ borderColor: "var(--border)" }}>
-        <p className="mb-2 text-xs text-aurora-pink">chromatic aberration</p>
+        <p className="aur-band mb-2 px-2 py-0.5 text-[11px] font-bold tracking-wider">chromatic aberration</p>
         <Slider label="h" min={-10} max={10} step={0.5} value={n(clip.chromaShiftH, 0)} onchange={(v) => setClip((c) => { c.chromaShiftH = v })} />
         <Slider label="v" min={-10} max={10} step={0.5} value={n(clip.chromaShiftV, 0)} onchange={(v) => setClip((c) => { c.chromaShiftV = v })} />
       </div>
 
       <div className="mb-3 border-t pt-3" style={{ borderColor: "var(--border)" }}>
-        <p className="mb-2 text-xs text-aurora-pink">bloom</p>
+        <p className="aur-band mb-2 px-2 py-0.5 text-[11px] font-bold tracking-wider">bloom</p>
         <Slider label="threshold" min={0} max={1} step={0.01} value={n(clip.bloomThreshold, 0.78)} onchange={(v) => setClip((c) => { c.bloomThreshold = v })} />
         <Slider label="radius" min={0.5} max={50} step={0.5} value={n(clip.bloomRadius, 8)} onchange={(v) => setClip((c) => { c.bloomRadius = v })} />
         <Slider label="intensity" min={0} max={1} step={0.01} value={n(clip.bloomIntensity, 0)} onchange={(v) => setClip((c) => { c.bloomIntensity = v })} />
       </div>
 
       <div className="mb-3 border-t pt-3" style={{ borderColor: "var(--border)" }}>
-        <p className="mb-2 text-xs text-aurora-pink">film blur</p>
+        <p className="aur-band mb-2 px-2 py-0.5 text-[11px] font-bold tracking-wider">film blur</p>
         <Slider label="sigma" min={0} max={10} step={0.1} value={n(clip.filmBlur, 0)} onchange={(v) => setClip((c) => { c.filmBlur = v })} />
       </div>
 
       <div className="mb-3 border-t pt-3" style={{ borderColor: "var(--border)" }}>
-        <p className="mb-2 text-xs text-aurora-pink">flicker (crt)</p>
+        <p className="aur-band mb-2 px-2 py-0.5 text-[11px] font-bold tracking-wider">flicker (crt)</p>
         {clip.flicker ? (
           <>
             <Slider label="chance" min={0} max={1} step={0.01} value={clip.flicker.chance} onchange={(v) => setClip((c) => { if (c.flicker) c.flicker.chance = v })} />
@@ -339,7 +339,7 @@ export function Inspector() {
       </div>
 
       <div className="mb-3 border-t pt-3" style={{ borderColor: "var(--border)" }}>
-        <p className="mb-2 text-xs text-aurora-pink">keyframes</p>
+        <p className="aur-band mb-2 px-2 py-0.5 text-[11px] font-bold tracking-wider">keyframes</p>
         {(clip.keyframes ?? []).map((kf, i) => (
           <div key={i} className="mb-1 flex items-center justify-between text-xs">
             <span className="text-aurora-pink">at {Math.round(kf.at * 100)}%</span>
@@ -354,7 +354,7 @@ export function Inspector() {
       </div>
 
       <div className="mb-3 border-t pt-3" style={{ borderColor: "var(--border)" }}>
-        <p className="mb-2 text-xs text-aurora-pink">text overlays</p>
+        <p className="aur-band mb-2 px-2 py-0.5 text-[11px] font-bold tracking-wider">text overlays</p>
         {(clip.texts ?? []).map((t, i) => (
           <div key={i} className="mb-2 rounded border p-2" style={{ borderColor: "var(--border)" }}>
             <input
@@ -379,7 +379,7 @@ export function Inspector() {
       </div>
 
       <div className="mb-3 border-t pt-3" style={{ borderColor: "var(--border)" }}>
-        <p className="mb-2 text-xs text-aurora-pink">transition in</p>
+        <p className="aur-band mb-2 px-2 py-0.5 text-[11px] font-bold tracking-wider">transition in</p>
         <div className="mb-2 grid gap-1">
           <Label className="text-xs">type</Label>
           <select
