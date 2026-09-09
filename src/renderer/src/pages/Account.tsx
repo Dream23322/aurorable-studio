@@ -51,7 +51,7 @@ export default function Account() {
   return (
     <div className="h-full overflow-auto p-6">
       <div className="mx-auto flex max-w-xl flex-col gap-4 pb-10">
-        <h1 className="text-xl font-bold text-aurora-bright">account</h1>
+        <div className="aur-band mb-4 px-2 py-1 text-sm font-bold tracking-wide">account</div>
 
         <section className="rounded-lg border p-4" style={{ borderColor: "var(--border)", background: "var(--bg-elev)" }}>
           <h2 className="mb-3 text-sm text-aurora-pink">password</h2>

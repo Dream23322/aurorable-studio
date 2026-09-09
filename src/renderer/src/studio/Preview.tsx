@@ -158,7 +158,7 @@ export function Preview({ previewUrl }: { previewUrl?: string | null }) {
 
   return (
     <div className="flex min-h-0 flex-col" style={{ background: "var(--bg-elev)" }}>
-      <div ref={frameRef} className="relative flex min-h-0 flex-1 items-center justify-center overflow-hidden bg-black">
+      <div ref={frameRef} className="relative flex min-h-0 flex-1 items-center justify-center overflow-hidden bg-black" style={{ border: "2px solid #141b28", boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.06), 0 1px 3px rgba(0,0,0,0.5)" }}>
         <video
           ref={videoRef}
           playsInline
